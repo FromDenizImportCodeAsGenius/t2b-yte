@@ -75,7 +75,7 @@ class bit_convert:
         data = data
         name = type(data).__qualname__
         array = bytearray
-        bitname = array(bytes(name.ljust(400).encode("utf-32")))
+        bitname = array(bytes(name.ljust(12800).encode("utf-32")))
         bitdata = array()
         dataclass = type(data)
         temp = bin(0)
@@ -88,7 +88,7 @@ class bit_convert:
                 temp = (data << 64).to_bytes()
 
             case "str":
-                temp = data.encode("utf-16")
+                temp = data.encode("utf-32")
 
             case str(types.NoneType)|str(types.EllipsisType)|str(types.NotImplementedType):
                 temp = bytes()
@@ -113,7 +113,7 @@ class bit_convert:
                     asd += bin(str(len(lend)))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
 
             case "filter"|"map"|"iter"|str(types.GeneratorType):
                 data = list(data)
@@ -128,7 +128,7 @@ class bit_convert:
                     asd += lend # Encoded Element
 
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
 
 
             case "set"|"frozenset":
@@ -141,16 +141,15 @@ class bit_convert:
                     asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
             case "range":
                 asd = ""
-                asd += bin(str(len(data)))[2:].ljust(80) # Binary, Padding for length of container
 
                 for elem in [data.start, data.stop, data.step]:
                     asd += bin(len(data))[2:].ljust(320) # Encoded Element
                 
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
             
             case "dict":
                 lnn = bin(str(len(data)))[2:].ljust(80)
@@ -177,14 +176,15 @@ class bit_convert:
 
                 qwe = lnn + asd + asdd
                 asdd = int(qwe,2)
-                temp = asdd.to_bytes((len(qwe)+7)//2)
+                temp = asdd.to_bytes((len(qwe)+7)//8)
 
             case "complex":
-                r = (data.real << 64).to_bytes()
-                i = (data.imag << 64).to_bytes()
-                rl = bytes([len(r)])
-                il = bytes([len(i)])
+                r = bin(data.real << 64)[2:]
+                i = bin(data.imag << 64)[2:]
+                rl = bin(len(r))[2:].ljust(80)
+                il = bin(len(i))[2:].ljust(80)
                 temp = rl + r + il + i
+		temp = int(temp,2).to_bytes((len(temp)+7)//8)
 
             case str(types.CodeType)|str(types.FunctionType)|str(types.BuiltinFunctionType)|str(types.MethodType)|str(types.BuiltinMethodType)|"type":
                 temp = dill.dumps(data)
@@ -202,7 +202,7 @@ class bit_convert:
                         asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                         asd += lend # Encoded Element
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
             case "enumerate":
                 _, (it, st) = data.__reduce__()
                 asd = bin(st)[2:].ljust(40)
@@ -213,7 +213,7 @@ class bit_convert:
                     asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
             case "file":
                 path = os.path.abspath(data.name) 
                 temp = path.encode("utf-32")
@@ -228,21 +228,40 @@ class bit_convert:
                     asd += p + m
                     left = decimal.Decimal(d) / decimal.Decimal(n - (n // d) * d)
                 asdd = int(asd,2)
-                temp = asdd.to_bytes((len(asd)+7)//2)
+                temp = asdd.to_bytes((len(asd)+7)//8)
 
             case _:
                 try:
                     data = decimal.Decimal(data)
-                    return self.convert(data,True)
+                    asd = ""
+                    left = data
+                    while left != 0:
+                        n, d = left.as_integer_ratio()
+                        whole = n // d
+                        m = bin(whole)[2:]
+                        p = bin(len(m))[2:].ljust(80)
+                        asd += p + m
+                        left = decimal.Decimal(d) / decimal.Decimal(n - (n // d) * d)
+                    asdd = int(asd,2)
+                    temp = asdd.to_bytes((len(asd)+7)//8)
                 except:
                     try:
                         data = list(data)
-                        return self.convert(data,True)
+                        asd = ""
+                        asd += bin(len(data))[2:].ljust(80) # Binary, Padding for length of container
+            
+                        for elem in data:
+            
+                            lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # type: ignore # Encoded Element
+                            asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
+                            asd += lend # Encoded Element
+                        asdd = int(asd,2)
+                        temp = asdd.to_bytes((len(asd)+7)//8)
                     except:
                         temp = dill.dumps(data)
 
 
-        bitdata = array(temp) #type:ignore
+        bitdata = array(temp)
         start = array([255])
         fill = bytes(3999200 - len(bitdata))
         stuffing = start + fill
