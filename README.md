@@ -5,4 +5,4 @@ The result can be extremely long so it's recommended to losslessly compress befo
 As a shortcut for saving the bytes can be turned into a string or int before using.
 
 Note for int saving:
-Most computers only support up to about 10^308 for an int but this integer well overpasses that limit.
+Most computers only support up to about 10^308 for an int but this integer might well overpass that limit.
