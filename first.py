@@ -251,41 +251,4 @@ class bit_convert:
             bits = stuffing + bits
         return bits
 
-if __name__ == "__main__":
-    BC = bit_convert()
-    file = open(r"C:\Users\ergin yıldız\Desktop\Python!\Jupyter\first.ipynb")
-    examples = [
-        12,
-        "Searched",
-        123.123,
-        complex(1,2),
-        NotImplemented,
-        None,
-        Ellipsis,
-        True,
-        False,
-        b"stuff",
-        bytearray(b"sdfds"),
-        memoryview(f"jhflajh{BC}".encode()),
-        [23686581245865,"jhljfjhlhsldhl",True],
-        {123,1244,"jhflkj",Ellipsis},
-        range(-231,231,2),
-        zip([1122,"asfdf","qwewq"],[1221,"qweqwq!!ğ👨🏻‍🧑🏻‍🧒🏻‍👦🏻💀💀👨🏿‍👨🏻‍👦🏽🔰🌑🌒🌓✔️✅😅🤣🤣🤣👜👛👜🥻!",None],[NotImplemented,StopIteration,ValueError]),
-        {123:123,"asdæ@ß":"\\"},
-        enumerate([1122,"asfdf","qwewq",1221,"qweqwq!!ğ👨🏻‍🧑🏻‍🧒🏻‍👦🏻💀💀👨🏿‍👨🏻‍👦🏽🔰🌑🌒🌓✔️✅😅🤣🤣🤣👜👛👜🥻!",None,NotImplemented,StopIteration,ValueError]),
-        BC,
-        dill,
-        file,
-        decimal.Decimal("3415414353451457.151347398573469514765948576349571"),
-        len,
-        (lambda x,y,z:x+y**z),
-        fractions.Fraction(3,24),
-        BC.convert,
-    ]
-    with open("C:/Users/ergin yıldız/Desktop/txttxt.txt","wb") as f:
-        pass
-    with open("C:/Users/ergin yıldız/Desktop/txttxt.txt","ab") as f:
-      for x in examples:
-        f.write(bytes(BC.convert(x)))
-    
-file.close()
+BC = bit_convert()
