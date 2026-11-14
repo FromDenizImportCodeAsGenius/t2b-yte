@@ -7,10 +7,10 @@ import fractions
 class bit_convert:
 
     def code_explain(self):
-        """
+        codeexp = """
         The result will have form
 
-        1(a byte of 11111111) - data bits(3999200 bytes) - type bits(800 bytes)
+        1(a byte of 11111111) - data bits(<= 3999200 bytes) - type bits(1600 bytes)
 
         data bytes for
 
@@ -36,29 +36,29 @@ class bit_convert:
         stored with .tobytes()
 
         list/tuple/filter/map/iter/generator:
-        stored as len and then index - len_data_and_type - data - type for each element
+        stored as len(80b) and then index(80b) - len_data_and_type(80b) - data - type(12800b) for each element
 
         set/frozenset:
-        stored as len and then len_data_and_type - data - type for each element
+        stored as len(80b) and then len_data_and_type(80b) - data - type(12800b) for each element
 
         range:
         three stored elements(40 bytes each)
         start - stop - step
 
         zip: 
-        len_of_zipped - zipped
+        len_of_zipped(40b) - zipped
 
         dict:
-        len and then tuple_of_keys - tuple_of_values
+        len(40b) and then tuple_of_keys - tuple_of_values
 
         enumerate: 
-        starting_index - len - data
+        starting_index(40b) - len(80b) - data
 
         complex:
-        lenreal - real - lenimag - imag
+        lenreal(80b) - real - lenimag(80b) - imag
 
         file:
-        mode - lenfilepath - file_path
+        file_path
 
         code/function/class:
         store with bytearray by dill.dumps
@@ -67,11 +67,18 @@ class bit_convert:
         store with bytearray by dill.dump_module
 
         decimal.Decimal:
-        store by storing the simple continued fraction by len - data for each number
+        store by storing the simple continued fraction by len(80b) - data for each number
 
-
+		else:
+		first check if it can be a decimal.Decimal if so work accordingly,
+		then check if it can be a list if so work as if it were a set
+		lastly if neither use dill.dumps()
+		
         """
-    def convert(self,data : Any ,call=False):
+
+		print(codeexp)
+		
+    def encode(self,data : Any ,call=False):
         data = data
         name = type(data).__qualname__
         array = bytearray
@@ -109,7 +116,7 @@ class bit_convert:
                 for ind,elem in enumerate(data):
                     asd += bin(ind)[2:].ljust(80) # Binary, Padding for index
 
-                    lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # type: ignore # Encoded Element
+                    lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # type: ignore # Encoded Element
                     asd += bin(str(len(lend)))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
                 asdd = int(asd,2)
@@ -123,7 +130,7 @@ class bit_convert:
                 for ind,elem in enumerate(data):
                     asd += bin(str(ind))[2:].ljust(80) # Binary, Padding for index
 
-                    lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # Encoded Element
+                    lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # Encoded Element
                     asd += bin(str(len(lend)))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
 
@@ -137,7 +144,7 @@ class bit_convert:
 
                 for elem in data:
 
-                    lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # type: ignore # Encoded Element
+                    lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # type: ignore # Encoded Element
                     asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
                 asdd = int(asd,2)
@@ -161,7 +168,7 @@ class bit_convert:
                 for ind,elem in enumerate(key):
                     asd += bin(str(ind))[2:].ljust(80) # Binary, Padding for index
 
-                    lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # Encoded Element
+                    lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # Encoded Element
                     asd += bin(str(len(lend)))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
 
@@ -170,7 +177,7 @@ class bit_convert:
                 for ind,elem in enumerate(val):
                     asdd += bin(str(ind))[2:].ljust(80) # Binary, Padding for index
 
-                    lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # Encoded Element
+                    lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # Encoded Element
                     asdd += bin(str(len(lend)))[2:].ljust(80) # Binary, Padding for length of element
                     asdd += lend # Encoded Element
 
@@ -198,7 +205,7 @@ class bit_convert:
                 asd = lll
                 for z in data:
                     for elem in z:
-                        lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # type: ignore # Encoded Element
+                        lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # type: ignore # Encoded Element
                         asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                         asd += lend # Encoded Element
                 asdd = int(asd,2)
@@ -209,7 +216,7 @@ class bit_convert:
                 asd += bin(len(data))[2:].ljust(80) # Binary, Padding for length of container
 
                 for elem in data:
-                    lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # type: ignore # Encoded Element
+                    lend = "".join(f"{b:08b}" for b in self.encode(elem,True)) # type: ignore # Encoded Element
                     asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                     asd += lend # Encoded Element
                 asdd = int(asd,2)
@@ -252,7 +259,7 @@ class bit_convert:
             
                         for elem in data:
             
-                            lend = "".join(f"{b:08b}" for b in self.convert(elem,True)) # type: ignore # Encoded Element
+                            lend = "".join(f"{b:08b}" for b in self.encode(elem,True))# Encoded Element
                             asd += bin(len(lend))[2:].ljust(80) # Binary, Padding for length of element
                             asd += lend # Encoded Element
                         asdd = int(asd,2)
@@ -263,8 +270,8 @@ class bit_convert:
 
         bitdata = array(temp)
         start = array([255])
-        fill = bytes(3999200 - len(bitdata))
-        stuffing = start + fill
+        #fill = bytes(3999200 - len(bitdata))
+        stuffing = start# + fill
         bits = bitdata + bitname
         if not bool(call):
             bits = stuffing + bits
